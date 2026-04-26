@@ -275,8 +275,10 @@ agent-scan peer codex security --scope worktree
 
 Draft child invocation:
 
+~~`codex exec -C <repo-root> --sandbox read-only --ask-for-approval never --ephemeral "<peer prompt>"`~~ (verified 2026-04-26: `--ask-for-approval` is a top-level `codex` flag, not a `codex exec` flag — see `docs/cli-flags.md`)
+
 ```bash
-codex exec -C <repo-root> --sandbox read-only --ask-for-approval never --ephemeral "<peer prompt>"
+codex --ask-for-approval never exec -C <repo-root> --sandbox read-only --ephemeral "<peer prompt>"
 ```
 
 Codex to Claude:

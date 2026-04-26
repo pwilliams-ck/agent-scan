@@ -10,7 +10,7 @@ production code without a failing test first.
 
 ## Where I am
 
-→ **`01-verify-cli-flags.md`** — first unchecked box
+→ **`02-scaffold-repo.md`** — first unchecked box
 
 Update this line whenever a step file's last box is flipped. The next step
 file's first unchecked box is always the true "next thing to do".
