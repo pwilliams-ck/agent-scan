@@ -1,34 +1,24 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Go
+/agent-scan
+*.exe
+*.dll
+*.dylib
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-*.egg
+# Test binaries built with `go test -c`
+*.test
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
+# Coverage
+coverage.out
+coverage.html
+coverage.txt
 
-# Testing
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
-coverage.xml
-.tox/
+# Build output
+/bin/
+/dist/
 
-# Type checking and lint caches
-.mypy_cache/
-.pyright/
-.ruff_cache/
+# Go workspace files
+go.work
+go.work.sum
 
 # direnv
 .envrc

@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Status
 
-Pre-implementation. The repo currently contains only `README.md` and `.gitignore`. The design record lives at `~/.claude/plans/agent-scan.md` and is the source of truth for architecture, CLI surface, profiles, peer-audit behavior, repo layout, build sequence, and acceptance criteria. Per the build sequence (step 2), that plan should be committed into this repo as `agent-scan-plan.md` — read it before starting any non-trivial work, and update it (don't delete sections, cross out and date) when design decisions change.
+Pre-implementation. The repo currently contains `README.md`, `.gitignore`, and the design record at `docs/agent-scan-plan.md`. That plan is the source of truth for architecture, CLI surface, profiles, peer-audit behavior, repo layout, build sequence, and acceptance criteria — read it before starting any non-trivial work, and update it (don't delete sections, cross out and date) when design decisions change.
 
 ## Architecture (big picture)
 
 Three layers, one stable core:
 
-1. **CLI core** — a Python stdlib package (`src/agent_scan/`) installed as `~/.local/bin/agent-scan`. Resolves the git repo root, loads optional TOML config, detects stacks (Go/Node/Python/Rust/Docker), runs `quality` or `security` profiles, emits Markdown + JSON. No third-party runtime dependencies.
+1. **CLI core** — a Go CLI built from `cmd/agent-scan/` (with internals under `internal/`) and installed as `~/.local/bin/agent-scan`. Resolves the git repo root, loads optional JSON config, detects stacks (Go/Node/Python/Rust/Docker), runs `quality` or `security` profiles, emits Markdown + JSON. Stdlib only — no third-party runtime dependencies.
 2. **Skill wrappers** — Claude Code slash commands (`~/.claude/commands/scan-quality.md`, `scan-security.md`, `codex-audit.md`) and a Codex skill (`~/.codex/skills/agent-scan-audit/SKILL.md`). Thin: they shell out to `agent-scan` and defer all defaults/validation to the CLI.
 3. **Peer dispatcher** — `agent-scan peer codex …` and `agent-scan peer claude …` spawn the *other* model as a non-interactive read-only subprocess in the same repo. Recursion is blocked via the `AGENT_SCAN_PEER_DEPTH` env var: if it's already set in the parent, the child refuses and exits 3.
 
@@ -20,6 +20,7 @@ Key invariants enforced by the CLI (not by the wrappers):
 - Exit codes: `0` pass/warning, `1` blocking findings, `2` runtime error, `3` peer recursion blocked.
 - No scan command mutates git state or edits repo files. Peer prompts forbid edit/stage/commit/stash/checkout/reset/merge/rebase/push and forbid recursive peer calls.
 - Missing optional tools are reported as `SKIPPED` unless `policy.missing_tools = "fail"`.
+- Config is JSON, parsed with `encoding/json` and `DisallowUnknownFields` so typos fail loudly.
 
 JSON output shape is a stable v1 contract — see the plan for the schema. Machine readers parse JSON, never Markdown.
 
@@ -27,17 +28,22 @@ JSON output shape is a stable v1 contract — see the plan for the schema. Machi
 
 **TDD is required for every step in the build sequence**: red → green → refactor. No production code without a failing test first. This applies to scope resolution, config loading, report rendering, both profiles, and the peer dispatcher.
 
-Once `pyproject.toml` exists, expected commands (per the plan):
+Once `go.mod` exists, expected commands (per the plan):
 
 ```bash
-pytest                              # full suite
-pytest tests/test_peer.py::test_X   # single test
-ruff check src tests                # lint + docstring (D rule set)
-./install.sh                        # install CLI + skills (idempotent, backs up to *.bak)
-./uninstall.sh                      # remove and restore *.bak
+go test ./...                                   # full suite
+go test ./internal/peer -run TestPeerRecursion  # single test
+go test -cover ./...                            # coverage summary
+gofmt -l .                                      # formatting drift
+go vet ./...                                    # built-in static analysis
+golangci-lint run                               # lint (revive, govet, staticcheck, errcheck, etc.)
+./install.sh                                    # install CLI + skills (idempotent, backs up to *.bak)
+./uninstall.sh                                  # remove and restore *.bak
 ```
 
-Coverage target: 80% line coverage on `src/agent_scan/`; CI fails below threshold. Shell installers are tested via bats or shell fixtures, not coverage-counted.
+Coverage target: 80% line coverage on `internal/` packages and `cmd/agent-scan`; CI fails below threshold. Shell installers are tested via bats or shell fixtures, not coverage-counted.
+
+Tests use real `git init` repos created with `t.TempDir()` rather than mocked git — scope resolution behavior is too coupled to actual git plumbing.
 
 Peer subprocess assembly must be verified end-to-end with fake `claude`/`codex` binaries on `PATH` — mocks alone are insufficient (per the plan's test list).
 
@@ -45,14 +51,14 @@ Before wiring peer subprocesses, verify the installed CLI flag syntax with `clau
 
 ## Documentation standards (enforced, not aspirational)
 
-- Every public function, class, and module in `src/agent_scan/` carries a docstring. Pick Google or NumPy style and stay consistent. CI enforces via `pydocstyle` or `ruff` `D` rules.
+- Every exported identifier (package, type, function, method, constant, variable) in `cmd/agent-scan/` and `internal/` carries a Go doc comment. Standard convention: comments start with the identifier name and read as a complete sentence. CI enforces via `golangci-lint` with `revive`'s `exported` rule (and optionally `package-comments`); `gofmt` and `go vet` are non-negotiable.
 - Inline comments only for non-obvious WHY (constraints, invariants, workarounds). No restating WHAT, no task references like "added for issue #X".
 - Each Claude command file and the Codex `SKILL.md` opens its body (after frontmatter) with a single `> Example: …` blockquote.
 - No `CHANGELOG.md` or `CONTRIBUTING.md` in v1.
 
 ## Non-goals for v1
 
-No cron, no scan history DB, no CI integration package, no Homebrew tap, no Docker image, no third-party Python runtime deps, no automatic fixing, no git mutations, no attempt to attach to an already-open Claude or Codex chat.
+No cron, no scan history DB, no CI integration package, no Homebrew tap, no Docker image, no third-party Go runtime deps, no automatic fixing, no git mutations, no attempt to attach to an already-open Claude or Codex chat.
 
 ## Claude command file gotcha
 

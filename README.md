@@ -5,8 +5,8 @@
 `agent-scan` is a generic, on-demand pre-commit scanner. It runs from any
 directory inside a git repo, resolves the repo root automatically, and reports
 quality and security findings as Markdown (for humans) or JSON (for machines).
-A single Python stdlib CLI is the stable core; Claude Code and Codex skills are
-thin wrappers that call it.
+A single Go CLI is the stable core; Claude Code and Codex skills are thin
+wrappers that call it.
 
 ## Why
 
@@ -22,14 +22,17 @@ what kicked off the run.
 
 ### CLI
 
+Requires Go 1.22+ to build.
+
 ```bash
 git clone <repo-url> agent-scan
 cd agent-scan
 ./install.sh
 ```
 
-`install.sh` installs the CLI to `~/.local/bin/agent-scan`, copies Claude Skill
-command files to `~/.claude/commands/`, and copies the Codex Skill to
+`install.sh` builds the CLI with `go build` and installs it to
+`~/.local/bin/agent-scan`, copies Claude Skill command files to
+`~/.claude/commands/`, and copies the Codex Skill to
 `~/.codex/skills/agent-scan-audit/`. Existing files are backed up to `*.bak`.
 Re-running is idempotent.
 
@@ -84,7 +87,7 @@ $ agent-scan security
 repo: /Users/me/code/my-app
 result: warning
 findings:
-  - medium  src/config.py:14  built-in-secrets  Possible AWS access key
+  - medium  internal/config/config.go:14  built-in-secrets  Possible AWS access key
 ```
 
 ### Staged-only scope
@@ -146,42 +149,51 @@ Config is optional. Repos work with built-in defaults.
 Precedence (later wins):
 
 ```text
-built-in defaults < ~/.config/agent-scan/config.toml < <repo>/.agent-scan.toml < CLI flags
+built-in defaults < ~/.config/agent-scan/config.json < <repo>/.agent-scan.json < CLI flags
 ```
 
-Example `.agent-scan.toml`:
+Example `.agent-scan.json`:
 
-```toml
-version = 1
-default_scope = "worktree"
-
-[policy]
-# "skip" reports missing tools as skipped checks; "fail" turns them into errors.
-missing_tools = "skip"
-# Severities (and synthetic categories) that flip the run to a blocking result.
-fail_on = ["critical", "high", "command_failed"]
-
-[timeouts]
-# Per-profile timeout in seconds.
-quality = 300
-security = 600
-# Total budget for a peer audit subprocess.
-peer = 900
-
-[ignore]
-# Glob patterns excluded from file inventory and built-in checks.
-paths = ["vendor/**", "node_modules/**", "dist/**", "coverage/**"]
-
-[quality]
-# Extra commands to run as part of the quality profile.
-extra_commands = []
-
-[security]
-# Extra commands to run as part of the security profile.
-extra_commands = []
-# Tool names to skip even if installed (e.g., "trivy").
-disabled_tools = []
+```json
+{
+  "version": 1,
+  "default_scope": "worktree",
+  "policy": {
+    "missing_tools": "skip",
+    "fail_on": ["critical", "high", "command_failed"]
+  },
+  "timeouts": {
+    "quality": 300,
+    "security": 600,
+    "peer": 900
+  },
+  "ignore": {
+    "paths": ["vendor/**", "node_modules/**", "dist/**", "coverage/**"]
+  },
+  "quality": {
+    "extra_commands": []
+  },
+  "security": {
+    "extra_commands": [],
+    "disabled_tools": []
+  }
+}
 ```
+
+Field reference:
+
+- `policy.missing_tools` — `"skip"` reports missing tools as skipped checks;
+  `"fail"` turns them into errors.
+- `policy.fail_on` — severities (and synthetic categories) that flip the run
+  to a blocking result.
+- `timeouts.quality` / `timeouts.security` — per-profile timeout in seconds.
+- `timeouts.peer` — total budget for a peer audit subprocess.
+- `ignore.paths` — glob patterns excluded from file inventory and built-in
+  checks.
+- `quality.extra_commands` / `security.extra_commands` — extra commands to
+  run as part of the profile.
+- `security.disabled_tools` — tool names to skip even if installed (e.g.,
+  `"trivy"`).
 
 ## Exit codes
 
@@ -196,7 +208,7 @@ disabled_tools = []
 
 **Tool not found.** Optional ecosystem tools (e.g. `gosec`, `gitleaks`,
 `pip-audit`) are reported as `SKIPPED` by default. Install the tool, or set
-`policy.missing_tools = "fail"` if you want missing tools to block.
+`policy.missing_tools` to `"fail"` if you want missing tools to block.
 
 **Peer recursion blocked (exit 3).** The child process saw
 `AGENT_SCAN_PEER_DEPTH=1` in its environment. Peer audits are intentionally
@@ -212,10 +224,10 @@ is not an error — `agent-scan` exits 0 with an empty `changed_files` list.
 Try `--scope all` if you want a full-repo sweep.
 
 **Peer subprocess timed out.** Default peer timeout is 900 seconds. Raise
-`timeouts.peer` in `.agent-scan.toml`, narrow the scope, or check whether the
+`timeouts.peer` in `.agent-scan.json`, narrow the scope, or check whether the
 peer model is hung waiting on auth.
 
 ## Contributing
 
-Open an issue or PR. Design decisions live in `agent-scan-plan.md` — read it
-before proposing larger changes.
+Open an issue or PR. Design decisions live in `docs/agent-scan-plan.md` —
+read it before proposing larger changes.
