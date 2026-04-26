@@ -10,7 +10,7 @@ production code without a failing test first.
 
 ## Where I am
 
-→ **`02-scaffold-repo.md`** — first unchecked box
+→ **`03-scope-resolution.md`** — first unchecked box
 
 Update this line whenever a step file's last box is flipped. The next step
 file's first unchecked box is always the true "next thing to do".
@@ -20,8 +20,13 @@ file's first unchecked box is always the true "next thing to do".
 - Open the file named in **Where I am**. Pick up at the first unchecked box.
 - Each box is a verifiable end-state — a passing test, a clean lint run, a
   file existing. Not a procedural verb like "run gofmt".
-- **One commit per box flipped.** If a box flips without a commit, it didn't
-  happen. The git log is the audit trail.
+- **Every flipped box must be backed by a commit, but one commit can flip
+  multiple coupled boxes.** E.g. "tests green", "binary builds", and
+  "vet/gofmt clean" all flip together at the green checkpoint of a TDD
+  cycle — that's one commit, not three. Group boxes that are physically the
+  same change. Don't publish broken intermediate states; red commits stay
+  local. The git log is the audit trail for boxes that *did* flip, not a
+  diary of every state change in the working tree.
 - When a step file's last box flips, update **Where I am** to point at the
   next file, in the same commit.
 - If a step's design changes, update both the step file *and* the plan
