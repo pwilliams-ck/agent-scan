@@ -8,19 +8,19 @@ Cross-cutting Go conventions live in `docs/agent-scan-plan.md` →
 
 ## Checklist
 
-- [ ] All config tests written; each fails for the right reason
-- [ ] All config tests green, including `-race`
-- [ ] `internal/config/` exports `Config`, `Load`, `Validate`, plus sentinel
+- [x] All config tests written; each fails for the right reason
+- [x] All config tests green, including `-race`
+- [x] `internal/config/` exports `Config`, `Load`, `Validate`, plus sentinel
       errors (`ErrUnknownField`, `ErrInvalidScope`, etc.)
-- [ ] `json.Decoder.DisallowUnknownFields()` enforced; typos surface with
+- [x] `json.Decoder.DisallowUnknownFields()` enforced; typos surface with
       file path and field name
-- [ ] Layered merge implemented and unit-testable in isolation (defaults →
+- [x] Layered merge implemented and unit-testable in isolation (defaults →
       global → repo → flags)
-- [ ] Home and repo paths injected via function arguments — no global
+- [x] Home and repo paths injected via function arguments — no global
       `os.UserHomeDir()` lookups inside the package
-- [ ] Doc comments on every exported identifier and field; package comment
+- [x] Doc comments on every exported identifier and field; package comment
       names the precedence rule and the JSON-only contract
-- [ ] `go test ./internal/config/... -count=1 -race`, `go vet`,
+- [x] `go test ./internal/config/... -count=1 -race`, `go vet`,
       `gofmt -l internal/config/` all clean
 
 Commit each box as it flips.
