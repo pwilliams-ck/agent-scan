@@ -9,18 +9,18 @@ Cross-cutting Go conventions live in `docs/agent-scan-plan.md` →
 
 ## Checklist
 
-- [ ] All scope tests written; each fails for the expected reason (not a
+- [x] All scope tests written; each fails for the expected reason (not a
       compile error)
-- [ ] All scope tests green, including `-race`
-- [ ] `internal/scope/` exports `Resolve`, `RepoRoot`, `Scope`, `Parse`,
+- [x] All scope tests green, including `-race`
+- [x] `internal/scope/` exports `Resolve`, `RepoRoot`, `Scope`, `Parse`,
       `ErrNotARepo`
-- [ ] Subprocess calls use `exec.CommandContext` and `-z` (NUL-delimited)
+- [x] Subprocess calls use `exec.CommandContext` and `-z` (NUL-delimited)
       throughout — paths with spaces, newlines, and unicode are correct
-- [ ] Shared `runGit` helper extracted (refactor); no duplicated argv
+- [x] Shared `runGit` helper extracted (refactor); no duplicated argv
       setup
-- [ ] Doc comments on every exported identifier; package comment in
+- [x] Doc comments on every exported identifier; package comment in
       `doc.go` names the scope-vs-working-tree v1 rule
-- [ ] `go test ./internal/scope/... -count=1 -race`, `go vet`,
+- [x] `go test ./internal/scope/... -count=1 -race`, `go vet`,
       `gofmt -l internal/scope/` all clean
 
 Commit each box as it flips.

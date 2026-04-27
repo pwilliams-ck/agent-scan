@@ -28,6 +28,8 @@ JSON output shape is a stable v1 contract — see the plan for the schema. Machi
 
 **TDD is required for every step in the build sequence**: red → green → refactor. No production code without a failing test first. This applies to scope resolution, config loading, report rendering, both profiles, and the peer dispatcher.
 
+**One commit per step — not per TDD phase, not per checkbox.** Bundle the failing tests, the implementation, the refactor, the doc-comment polish, and the ticked `docs/todo/<step>.md` checkboxes into a single commit. Phrases like "commit each box as it flips" in the step files mean "commit when the work behind that box is done," not "one commit per box." A separate commit just to tick checkboxes or to mark a TODO done is forbidden.
+
 Once `go.mod` exists, expected commands (per the plan):
 
 ```bash
