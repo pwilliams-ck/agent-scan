@@ -30,6 +30,8 @@ JSON output shape is a stable v1 contract — see the plan for the schema. Machi
 
 **One commit per step — not per TDD phase, not per checkbox.** Bundle the failing tests, the implementation, the refactor, the doc-comment polish, and the ticked `docs/todo/<step>.md` checkboxes into a single commit. Phrases like "commit each box as it flips" in the step files mean "commit when the work behind that box is done," not "one commit per box." A separate commit just to tick checkboxes or to mark a TODO done is forbidden.
 
+**One feature branch per step, merged via PR before the next step starts.** Each step file gets its own `feat/<step-name>` branch off `main`. When the step's commit lands on the branch, push, open a PR, merge into `main`, delete the branch. The next step branches fresh off the now-updated `main`. Don't keep coding on a step branch after its work is done, and don't start the next step until the previous PR is merged (or explicitly stack with the user's go-ahead).
+
 Once `go.mod` exists, expected commands (per the plan):
 
 ```bash
