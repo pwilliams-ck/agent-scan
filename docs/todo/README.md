@@ -17,6 +17,7 @@ file's first unchecked box is always the true "next thing to do".
 
 ## How to use
 
+- **Branch first.** Before editing any file in a step, check out a feature branch named for the step — e.g. `git checkout -b feat/scope-resolution` for step 03, `feat/config-loading` for step 04. Never code on `main`. If you forgot and committed on main, stop and move the work onto a branch before continuing.
 - Open the file named in **Where I am**. Pick up at the first unchecked box.
 - Each box is a verifiable end-state — a passing test, a clean lint run, a
   file existing. Not a procedural verb like "run gofmt".
